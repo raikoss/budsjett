@@ -21,8 +21,6 @@ class App extends Component {
       width: 0
     }
 
-    this.element;
-
     this.addUser = this.addUser.bind(this);
   }
 
@@ -76,9 +74,16 @@ class App extends Component {
     const height = this.element.clientHeight;
     const width = this.element.clientWidth;
 
+    // FAB
     document.addEventListener('DOMContentLoaded', function() {
-      var elems = document.querySelectorAll('.fixed-action-btn');
-      var instances = window.M.FloatingActionButton.init(elems, {});
+      const elems = document.querySelectorAll('.fixed-action-btn');
+      window.M.FloatingActionButton.init(elems, {});
+    });
+
+    // Nav
+    document.addEventListener('DOMContentLoaded', function() {
+      const elems = document.querySelectorAll('.sidenav');
+      window.M.Sidenav.init(elems, {});
     });
 
     console.log(height);
@@ -131,8 +136,32 @@ class App extends Component {
     }
 
     return (
-      <div className="container" >
-        {renderingPage}
+      <div>
+        <nav style={{marginBottom: "20px"}}>
+        <div className="container">
+          <div className="nav-wrapper">
+            <a href="#!" className="brand-logo">Logo</a>
+            <a href="#" data-target="mobile-demo" className="sidenav-trigger"><i className="material-icons">menu</i></a>
+            <ul className="right hide-on-med-and-down">
+              <li><a href="sass.html">Sass</a></li>
+              <li><a href="badges.html">Components</a></li>
+              <li><a href="collapsible.html">Javascript</a></li>
+              <li><a href="mobile.html">Mobile</a></li>
+            </ul>
+          </div>
+        </div>
+      </nav>
+
+      <ul className="sidenav" id="mobile-demo">
+        <li><a href="sass.html">Sass</a></li>
+        <li><a href="badges.html">Components</a></li>
+        <li><a href="collapsible.html">Javascript</a></li>
+        <li><a href="mobile.html">Mobile</a></li>
+      </ul>
+        
+        <div className="container" >
+          {renderingPage}
+        </div>
       </div>
     );
   }

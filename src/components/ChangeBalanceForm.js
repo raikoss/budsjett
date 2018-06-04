@@ -19,7 +19,7 @@ class ChangeBalanceForm extends Component {
     componentDidMount() {
         document.addEventListener('DOMContentLoaded', function() {
             var elems = document.querySelectorAll('select');
-            var instances = window.M.FormSelect.init(elems, {classes: ""});
+            window.M.FormSelect.init(elems, {classes: ""});
         });
     }
 
@@ -54,12 +54,14 @@ class ChangeBalanceForm extends Component {
                             <input id="amount" className="validate" type="number" value={this.state.amount} onChange={event => this.setState({amount: event.target.value.replace(/\D/,'')})} name="amount" />
                             <label htmlFor="amount">Amount</label>
                         </div>
-                        <select value={this.state.categoryId} onChange={this.handleChange} name="categoryId">
-                            <option value="0" disabled>Kategori</option>
-                            <option value="1">Fyll og fanteri</option>
-                            <option value="2">Mat</option>
-                            <option value="3">Tull og tøys</option>
-                        </select>
+                        <div className="input-field">
+                            <select value={this.state.categoryId} onChange={this.handleChange} name="categoryId">
+                                <option value="0" disabled>Kategori</option>
+                                <option value="1">Fyll og fanteri</option>
+                                <option value="2">Mat</option>
+                                <option value="3">Tull og tøys</option>
+                            </select>
+                        </div>
                         <div className="input-field">
                             <input id="comment" className="validate" type="text" value={this.state.comment} onChange={this.handleChange} name="comment" />
                             <label htmlFor="comment">Comment</label>
