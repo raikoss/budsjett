@@ -34,7 +34,7 @@ class ChangeBalanceForm extends Component {
     createTransaction() {
         const db = this.props.db;
 
-        db.collection("change").add({
+        db.collection("transactions").add({
             ...this.state
         })
         .then(function(docRef) {

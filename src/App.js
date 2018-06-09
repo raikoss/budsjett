@@ -5,6 +5,7 @@ import '../node_modules/materialize-css/dist/css/materialize.min.css';
 import '../node_modules/materialize-css/dist/js/materialize.min.js';
 import ChangeBalanceForm from "./components/ChangeBalanceForm";
 import Chart from "./components/Chart";
+import TransactionOverview from "./components/TransactionOverview";
 
 const firebase = require("firebase");
 // Required for side-effects
@@ -16,9 +17,7 @@ class App extends Component {
 
     this.state = {
       db: null, 
-      creatingTransaction: false, 
-      height: 0,
-      width: 0
+      creatingTransaction: false
     }
 
     this.addUser = this.addUser.bind(this);
@@ -59,20 +58,17 @@ class App extends Component {
     };
 
     firebase.initializeApp(config);
+    let db = firebase.firestore();
+    const settings = {timestampsInSnapshots: true};
+    db.settings(settings);
     
     // Initialize Cloud Firestore through Firebase
-    this.setState({db: firebase.firestore()}, () => {
-      const settings = {timestampsInSnapshots: true};
-      this.state.db.settings(settings);
-    })
+    this.setState({db: db});
     // db = firebase.firestore();
   }
 
   componentDidMount() {
     this.initFirestore();
-
-    const height = this.element.clientHeight;
-    const width = this.element.clientWidth;
 
     // FAB
     document.addEventListener('DOMContentLoaded', function() {
@@ -85,45 +81,10 @@ class App extends Component {
       const elems = document.querySelectorAll('.sidenav');
       window.M.Sidenav.init(elems, {});
     });
-
-    console.log(height);
-    this.setState({height: height, width: width});
   }
 
   render() {
-    const chartData = {
-      labels: ["Test1", "Test2"], 
-      datasets: [
-        {
-          label: "First set", 
-          fillColor: "rgba(220,220,220,0.5)",
-          strokeColor: "rgba(220,220,220,0.8)",
-          highlightFill: "rgba(220,220,220,0.75)",
-          highlightStroke: "rgba(220,220,220,1)",
-          data: [65, 59]
-        }, {
-          label: "Second set", 
-          fillColor: "rgba(220,220,220,0.5)",
-          strokeColor: "rgba(220,220,220,0.8)",
-          highlightFill: "rgba(220,220,220,0.75)",
-          highlightStroke: "rgba(220,220,220,1)",
-          data: [13, 34]
-        }
-      ]
-    }
-
-    const chartOptions = {
-
-    }
-
-    const mainPage = <div ref={element => this.element = element}>
-        <div className="fixed-action-btn">
-          <a className="btn-floating btn-large red" onClick={() => this.setState({creatingTransaction: true})}>
-            <i className="large material-icons">add</i>
-          </a>
-        </div>
-        <Chart data={chartData} options={chartOptions} parentHeight={this.state.height} parentWidth={this.state.width} />
-      </div>
+    const mainPage = <TransactionOverview db={this.state.db} />
 
     const transactionPage = <ChangeBalanceForm adding={true} db={this.state.db} />;
 
