@@ -26,74 +26,69 @@ class TransactionOverview extends Component {
         this.setState({height: height, width: width});
     }
 
-    getTransactions() {
-        
+    componentDidUpdate(prevProps, prevState) {
+        console.log("Updated, prevprops", prevProps);
+        console.log("Updated, prevstate", prevState);
     }
 
-    static getDerivedStateFromProps(newProps, prevState) {
-        let newState = {};
-        if (newProps.db != prevState.db) {
-            console.log(newProps)
-            newState.db = newProps.db;
+    // static getDerivedStateFromProps(newProps, prevState) {
+    //     let newState = {};
+    //     if (newProps.db != prevState.db) {
+    //         newState.db = newProps.db;
 
-            console.log(newState);
-            return newState.db.collection("change").get()
-            .then((querySnapshot) => {
-                // this.setState({transactions: querySnapshot});
-                newState.transactions = [];
+    //         newState.db.collection("change").get()
+    //         .then((querySnapshot) => {
+    //             // this.setState({transactions: querySnapshot});
+    //             newState.transactions = [];
 
-                querySnapshot.forEach((doc) => {
-                    console.log(doc.data());
-                    newState.transactions.push(doc.data());
-                    // console.log(`${doc.id} => `, doc.data());
-                });
+    //             querySnapshot.forEach((doc) => {
+    //                 newState.transactions.push(doc.data());
+    //                 // console.log(`${doc.id} => `, doc.data());
+    //             });
+    //         });
+    //     } 
 
-                console.log(newState);
+    //     console.log("Returning newState", newState);
 
-                return newState;
-            });
-        }
-
-        return newState;
-    }
+    //     return newState;
+    // }
 
     render() {
-        const chartData = {
-            labels: ["Test1", "Test2"], 
-            datasets: [
-              {
-                label: "First set", 
-                fillColor: "rgba(220,220,220,0.5)",
-                strokeColor: "rgba(220,220,220,0.8)",
-                highlightFill: "rgba(220,220,220,0.75)",
-                highlightStroke: "rgba(220,220,220,1)",
-                data: [65, 59]
-              }, {
-                label: "Second set", 
-                fillColor: "rgba(220,220,220,0.5)",
-                strokeColor: "rgba(220,220,220,0.8)",
-                highlightFill: "rgba(220,220,220,0.75)",
-                highlightStroke: "rgba(220,220,220,1)",
-                data: [13, 34]
-              }
-            ]
-          }
+        // const chartData = {
+        //     labels: ["Test1", "Test2"], 
+        //     datasets: [
+        //       {
+        //         label: "First set", 
+        //         fillColor: "rgba(220,220,220,0.5)",
+        //         strokeColor: "rgba(220,220,220,0.8)",
+        //         highlightFill: "rgba(220,220,220,0.75)",
+        //         highlightStroke: "rgba(220,220,220,1)",
+        //         data: [65, 59]
+        //       }, {
+        //         label: "Second set", 
+        //         fillColor: "rgba(220,220,220,0.5)",
+        //         strokeColor: "rgba(220,220,220,0.8)",
+        //         highlightFill: "rgba(220,220,220,0.75)",
+        //         highlightStroke: "rgba(220,220,220,1)",
+        //         data: [13, 34]
+        //       }
+        //     ]
+        //   }
       
-          const chartOptions = {
+        //   const chartOptions = {
       
-          }
+        //   }
 
         return (
             <div>
                 <div className="fixed-action-btn">
-                    <a className="btn-floating btn-large red" onClick={() => this.setState({creatingTransaction: true})}>
+                    <a className="btn-floating btn-large red" onClick={this.props.fabClickHandler}>
                         <i className="large material-icons">add</i>
                     </a>
                 </div>
                 <div ref={element => this.element = element}>
                     <div style={{width: "100%", height: "300px", border: "1px solid black"}} ></div>
                     <div className="transactions-container">
-                    {console.log(this.state.transactions)}
                         {this.state.transactions.map(transaction => 
                             <div className={"transaction row " + transaction.adding ? "positive" : "negative"}>
                                 <div className="col s2">

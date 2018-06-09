@@ -45,22 +45,33 @@ class ChangeBalanceForm extends Component {
         });
     }
 
+    // static getDerivedStateFromProps(newProps, prevState) {
+    //     document.addEventListener('DOMContentLoaded', function() {
+    //         var elems = document.querySelectorAll('select');
+    //         window.M.FormSelect.init(elems, {classes: ""});
+    //     });
+
+    //     return null;
+    // }
+
     render() {
         return (
             <div className="row">
                 <div className="col s8 offset-s2 z-depth-3" style={{borderRadius: "3px"}}>
                     <div className="balance-form-container">
+                        <a className="waves-effect waves-light btn" onClick={this.props.cancelCreatingTransaction}>Tilbake</a>
                         <div className="input-field">
                             <input id="amount" className="validate" type="number" value={this.state.amount} onChange={event => this.setState({amount: event.target.value.replace(/\D/,'')})} name="amount" />
                             <label htmlFor="amount">Amount</label>
                         </div>
                         <div className="input-field">
-                            <select value={this.state.categoryId} onChange={this.handleChange} name="categoryId">
+                            <select id="category" className="browser-default" value={this.state.categoryId} onChange={this.handleChange} name="categoryId">
                                 <option value="0" disabled>Kategori</option>
                                 <option value="1">Fyll og fanteri</option>
                                 <option value="2">Mat</option>
                                 <option value="3">Tull og tøys</option>
                             </select>
+                            <label htmlFor="category">Category</label>
                         </div>
                         <div className="input-field">
                             <input id="comment" className="validate" type="text" value={this.state.comment} onChange={this.handleChange} name="comment" />

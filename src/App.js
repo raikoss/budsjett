@@ -6,6 +6,7 @@ import '../node_modules/materialize-css/dist/js/materialize.min.js';
 import ChangeBalanceForm from "./components/ChangeBalanceForm";
 import Chart from "./components/Chart";
 import TransactionOverview from "./components/TransactionOverview";
+import Nav from "./components/Nav";
 
 const firebase = require("firebase");
 // Required for side-effects
@@ -21,6 +22,8 @@ class App extends Component {
     }
 
     this.addUser = this.addUser.bind(this);
+    this.fabClickHandler = this.fabClickHandler.bind(this);
+    this.cancelCreatingTransaction = this.cancelCreatingTransaction.bind(this);
   }
 
   addUser(user) {
@@ -42,9 +45,9 @@ class App extends Component {
     this.state.db.collection("users").get()
     .then((querySnapshot) => {
       querySnapshot.forEach((doc) => {
-          console.log(`${doc.id} => `, doc.data());
+        console.log(`${doc.id} => `, doc.data());
       });
-  });
+    });
   }
 
   initFirestore() {
@@ -56,15 +59,14 @@ class App extends Component {
       storageBucket: "budsjett-235ad.appspot.com",
       messagingSenderId: "188186445285"
     };
-
+    
+    // Initialize Cloud Firestore through Firebase
     firebase.initializeApp(config);
-    let db = firebase.firestore();
+    const db = firebase.firestore();
     const settings = {timestampsInSnapshots: true};
     db.settings(settings);
     
-    // Initialize Cloud Firestore through Firebase
     this.setState({db: db});
-    // db = firebase.firestore();
   }
 
   componentDidMount() {
@@ -83,43 +85,26 @@ class App extends Component {
     });
   }
 
+  fabClickHandler() {
+    this.setState({creatingTransaction: true});
+  }
+
+  cancelCreatingTransaction() {
+    this.setState({creatingTransaction: false});
+  }
+
   render() {
-    const mainPage = <TransactionOverview db={this.state.db} />
-
-    const transactionPage = <ChangeBalanceForm adding={true} db={this.state.db} />;
-
-    let renderingPage;
+    let renderingPage = null;
 
     if (this.state.creatingTransaction) {
-      renderingPage = transactionPage;
+      renderingPage = <ChangeBalanceForm adding={true} db={this.state.db} cancelCreatingTransaction={this.cancelCreatingTransaction} />;
     } else {
-      renderingPage = mainPage;
+      renderingPage = <TransactionOverview db={this.state.db} fabClickHandler={this.fabClickHandler} />;
     }
 
     return (
       <div>
-        <nav style={{marginBottom: "20px"}}>
-        <div className="container">
-          <div className="nav-wrapper">
-            <a href="#!" className="brand-logo">Logo</a>
-            <a href="#" data-target="mobile-demo" className="sidenav-trigger"><i className="material-icons">menu</i></a>
-            <ul className="right hide-on-med-and-down">
-              <li><a href="sass.html">Sass</a></li>
-              <li><a href="badges.html">Components</a></li>
-              <li><a href="collapsible.html">Javascript</a></li>
-              <li><a href="mobile.html">Mobile</a></li>
-            </ul>
-          </div>
-        </div>
-      </nav>
-
-      <ul className="sidenav" id="mobile-demo">
-        <li><a href="sass.html">Sass</a></li>
-        <li><a href="badges.html">Components</a></li>
-        <li><a href="collapsible.html">Javascript</a></li>
-        <li><a href="mobile.html">Mobile</a></li>
-      </ul>
-        
+        <Nav />       
         <div className="container" >
           {renderingPage}
         </div>
