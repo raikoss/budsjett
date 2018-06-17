@@ -8,18 +8,13 @@ class TransactionOverview extends Component {
         this.state = {
             height: 0,
             width: 0, 
-            transactions: [], 
-            db: null
+            transactions: []
         }
 
         this.element = null;
     }
 
     componentDidMount() {
-        if (!this.props.db) {
-            return;
-        }
-
         const height = this.element.clientHeight;
         const width = this.element.clientWidth;
 
@@ -27,8 +22,21 @@ class TransactionOverview extends Component {
     }
 
     componentDidUpdate(prevProps, prevState) {
-        console.log("Updated, prevprops", prevProps);
-        console.log("Updated, prevstate", prevState);
+        if (prevProps.db !== this.props.db) {
+            const transactions = [];
+            this.props.db.collection("change").get()
+            .then((querySnapshot) => {
+                // this.setState({transactions: querySnapshot});
+
+                querySnapshot.forEach((doc) => {
+                    transactions.push({...doc.data(), id: doc.id});
+                    console.log(`${doc.id} => `, doc.data());
+                });
+
+                this.setState({transactions});
+            });
+
+        }
     }
 
     // static getDerivedStateFromProps(newProps, prevState) {
@@ -89,8 +97,8 @@ class TransactionOverview extends Component {
                 <div ref={element => this.element = element}>
                     <div style={{width: "100%", height: "300px", border: "1px solid black"}} ></div>
                     <div className="transactions-container">
-                        {this.state.transactions.map(transaction => 
-                            <div className={"transaction row " + transaction.adding ? "positive" : "negative"}>
+                        {this.state.transactions.map(transaction =>
+                            <div className={"transaction row " + (transaction.adding ? "positive" : "negative")} key={transaction.id}>
                                 <div className="col s2">
                                     {transaction.categoryId}
                                 </div>
