@@ -32,17 +32,18 @@ class ChangeBalanceForm extends Component {
     }
 
     createTransaction() {
-        const db = this.props.db;
+        this.props.createTransaction({...this.state});
+        // const db = this.props.db;
 
-        db.collection("transactions").add({
-            ...this.state
-        })
-        .then(function(docRef) {
-            console.log("Document written with ID: ", docRef.id);
-        })
-        .catch(function(error) {
-            console.error("Error adding document: ", error);
-        });
+        // db.collection("transactions").add({
+        //     ...this.state
+        // })
+        // .then(function(docRef) {
+        //     console.log("Document written with ID: ", docRef.id);
+        // })
+        // .catch(function(error) {
+        //     console.error("Error adding document: ", error);
+        // });
     }
 
     // static getDerivedStateFromProps(newProps, prevState) {
@@ -66,10 +67,13 @@ class ChangeBalanceForm extends Component {
                         </div>
                         <div className="input-field">
                             <select id="category" className="browser-default" value={this.state.categoryId} onChange={this.handleChange} name="categoryId">
-                                <option value="0" disabled>Kategori</option>
+                                {/* <option value="0" disabled>Kategori</option>
                                 <option value="1">Fyll og fanteri</option>
                                 <option value="2">Mat</option>
-                                <option value="3">Tull og tøys</option>
+                                <option value="3">Tull og tøys</option> */}
+                                {this.props.categories.map(category => 
+                                    <option value={category.id}>{category.name}</option>
+                                )}
                             </select>
                             <label htmlFor="category">Category</label>
                         </div>

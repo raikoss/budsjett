@@ -18,12 +18,16 @@ class App extends Component {
 
     this.state = {
       db: null, 
-      creatingTransaction: false
+      creatingTransaction: false, 
+      transactions: [], 
+      fetchingTransactions: true, 
+      categories: []
     }
 
     this.addUser = this.addUser.bind(this);
     this.fabClickHandler = this.fabClickHandler.bind(this);
     this.cancelCreatingTransaction = this.cancelCreatingTransaction.bind(this);
+    this.createTransaction = this.createTransaction.bind(this);
   }
 
   addUser(user) {
@@ -85,8 +89,44 @@ class App extends Component {
     });
   }
 
+  fetchTransactions() {
+    const transactions = [];
+    this.state.db.collection("change").get()
+    .then((querySnapshot) => {
+      querySnapshot.forEach((doc) => {
+          transactions.push({...doc.data(), id: doc.id});
+          console.log(`${doc.id} => `, doc.data());
+      });
+
+      this.setState({transactions, fetchingTransactions: false});
+    });
+  }
+
+  fetchCategories() {
+    return;
+  }
+
+  componentDidUpdate(prevProps, prevState) {
+    if (prevState.db !== this.state.db) {
+      this.fetchTransactions();
+      this.fetchCategories();
+    }
+  }
+
   fabClickHandler() {
     this.setState({creatingTransaction: true});
+  }
+
+  createTransaction() {
+    this.state.db.collection("transactions").add({
+      ...this.state
+    })
+    .then(function(docRef) {
+      console.log("Document written with ID: ", docRef.id);
+    })
+    .catch(function(error) {
+      console.error("Error adding document: ", error);
+    });
   }
 
   cancelCreatingTransaction() {
@@ -97,9 +137,18 @@ class App extends Component {
     let renderingPage = null;
 
     if (this.state.creatingTransaction) {
-      renderingPage = <ChangeBalanceForm adding={true} db={this.state.db} cancelCreatingTransaction={this.cancelCreatingTransaction} />;
+      renderingPage = <ChangeBalanceForm 
+        adding={true} 
+        categories={this.state.categories} 
+        cancelCreatingTransaction={this.cancelCreatingTransaction} 
+        createTransaction={this.createTransaction}
+      />;
     } else {
-      renderingPage = <TransactionOverview db={this.state.db} fabClickHandler={this.fabClickHandler} />;
+      renderingPage = <TransactionOverview 
+        transactions={this.state.transactions} 
+        fetching={this.state.fetchingTransactions}
+        fabClickHandler={this.fabClickHandler} 
+      />;
     }
 
     return (

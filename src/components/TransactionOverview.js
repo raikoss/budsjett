@@ -8,7 +8,7 @@ class TransactionOverview extends Component {
         this.state = {
             height: 0,
             width: 0, 
-            transactions: []
+            // transactions: []
         }
 
         this.element = null;
@@ -21,23 +21,12 @@ class TransactionOverview extends Component {
         this.setState({height: height, width: width});
     }
 
-    componentDidUpdate(prevProps, prevState) {
-        if (prevProps.db !== this.props.db) {
-            const transactions = [];
-            this.props.db.collection("change").get()
-            .then((querySnapshot) => {
-                // this.setState({transactions: querySnapshot});
+    // componentDidUpdate(prevProps, prevState) {
+    //     if (prevProps.db !== this.props.db) {
+            
 
-                querySnapshot.forEach((doc) => {
-                    transactions.push({...doc.data(), id: doc.id});
-                    console.log(`${doc.id} => `, doc.data());
-                });
-
-                this.setState({transactions});
-            });
-
-        }
-    }
+    //     }
+    // }
 
     // static getDerivedStateFromProps(newProps, prevState) {
     //     let newState = {};
@@ -87,30 +76,51 @@ class TransactionOverview extends Component {
       
         //   }
 
+        const fab = <div className="fixed-action-btn">
+            <a className="btn-floating btn-large red" onClick={this.props.fabClickHandler}>
+                <i className="large material-icons">add</i>
+            </a>
+        </div>;
+
+        const page = this.props.fetching ? 
+        <div className="center-align">
+            <div className="preloader-wrapper active">
+                <div className="spinner-layer spinner-blue-only">
+                    <div className="circle-clipper left">
+                        <div className="circle"></div>
+                    </div><div className="gap-patch">
+                        <div className="circle"></div>
+                    </div><div className="circle-clipper right">
+                        <div className="circle"></div>
+                    </div>
+                </div>
+            </div> 
+        </div>
+        : 
+        <div className="transactions-container">
+        {this.props.transactions.map(transaction =>
+            <div className={"transaction row " + (transaction.adding ? "positive" : "negative")} key={transaction.id}>
+                <div className="col s2">
+                    {transaction.categoryId}
+                </div>
+                <div className="col s6">
+                    {transaction.comment}
+                </div>
+                <div className="col s4">
+                    {transaction.amount}
+                </div>
+            </div>
+        )}
+        </div>
+
+
+        
         return (
             <div>
-                <div className="fixed-action-btn">
-                    <a className="btn-floating btn-large red" onClick={this.props.fabClickHandler}>
-                        <i className="large material-icons">add</i>
-                    </a>
-                </div>
+                {fab}
                 <div ref={element => this.element = element}>
                     <div style={{width: "100%", height: "300px", border: "1px solid black"}} ></div>
-                    <div className="transactions-container">
-                        {this.state.transactions.map(transaction =>
-                            <div className={"transaction row " + (transaction.adding ? "positive" : "negative")} key={transaction.id}>
-                                <div className="col s2">
-                                    {transaction.categoryId}
-                                </div>
-                                <div className="col s6">
-                                    {transaction.comment}
-                                </div>
-                                <div className="col s4">
-                                    {transaction.amount}
-                                </div>
-                            </div>
-                        )}
-                    </div>
+                    {page}
                     {/* <Chart data={chartData} options={chartOptions} parentHeight={this.state.height} parentWidth={this.state.width} /> */}
                 </div>
             </div>
