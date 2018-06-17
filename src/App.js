@@ -7,8 +7,10 @@ import ChangeBalanceForm from "./components/ChangeBalanceForm";
 import Chart from "./components/Chart";
 import TransactionOverview from "./components/TransactionOverview";
 import Nav from "./components/Nav";
+import LoginForm from "./components/LoginForm";
 
-const firebase = require("firebase");
+import StyledFirebaseAuth from "react-firebaseui/StyledFirebaseAuth";
+import firebase from "firebase";
 // Required for side-effects
 require("firebase/firestore");
 
@@ -21,38 +23,41 @@ class App extends Component {
       creatingTransaction: false, 
       transactions: [], 
       fetchingTransactions: true, 
-      categories: []
+      categories: [], 
+      displayLoginForm: false, 
+      user: null
     }
 
-    this.addUser = this.addUser.bind(this);
+    // this.addUser = this.addUser.bind(this);
     this.fabClickHandler = this.fabClickHandler.bind(this);
     this.cancelCreatingTransaction = this.cancelCreatingTransaction.bind(this);
     this.createTransaction = this.createTransaction.bind(this);
+    this.loginButtonClickHandler = this.loginButtonClickHandler.bind(this);
   }
 
-  addUser(user) {
-    this.state.db.collection("users").add({
-      first: user.first,
-      middle: user.middle, 
-      last: user.last,
-      born: user.born
-    })
-    .then(function(docRef) {
-        console.log("Document written with ID: ", docRef.id);
-    })
-    .catch(function(error) {
-        console.error("Error adding document: ", error);
-    });
-  }
+  // addUser(user) {
+  //   this.state.db.collection("users").add({
+  //     first: user.first,
+  //     middle: user.middle, 
+  //     last: user.last,
+  //     born: user.born
+  //   })
+  //   .then(function(docRef) {
+  //       console.log("Document written with ID: ", docRef.id);
+  //   })
+  //   .catch(function(error) {
+  //       console.error("Error adding document: ", error);
+  //   });
+  // }
 
-  showUsers() {
-    this.state.db.collection("users").get()
-    .then((querySnapshot) => {
-      querySnapshot.forEach((doc) => {
-        console.log(`${doc.id} => `, doc.data());
-      });
-    });
-  }
+  // showUsers() {
+  //   this.state.db.collection("users").get()
+  //   .then((querySnapshot) => {
+  //     querySnapshot.forEach((doc) => {
+  //       console.log(`${doc.id} => `, doc.data());
+  //     });
+  //   });
+  // }
 
   initFirestore() {
     var config = {
@@ -70,11 +75,41 @@ class App extends Component {
     const settings = {timestampsInSnapshots: true};
     db.settings(settings);
     
-    this.setState({db: db});
+    this.setState({db});
+  }
+
+  initFirebaseAuth() {
+    this.uiConfig = {
+      // Popup signin flow rather than redirect flow.
+      signInFlow: 'popup',
+      // We will display Google and Facebook as auth providers.
+      signInOptions: [
+        firebase.auth.GoogleAuthProvider.PROVIDER_ID,
+        firebase.auth.FacebookAuthProvider.PROVIDER_ID, 
+        firebase.auth.EmailAuthProvider.PROVIDER_ID
+      ],
+      callbacks: {
+        // Avoid redirects after sign-in.
+        signInSuccessWithAuthResult: (authResult) => {
+          console.log(authResult);
+          return false;
+        }
+      }
+    }
+
+    this.unregisterAuthObserver = firebase.auth().onAuthStateChanged((user) => {
+      this.setState({user: {
+        id: user.uid, 
+        name: user.displayName, 
+        email: user.email, 
+        phoneNumber: user.phoneNumber
+      }})
+    });
   }
 
   componentDidMount() {
     this.initFirestore();
+    this.initFirebaseAuth();
 
     // FAB
     document.addEventListener('DOMContentLoaded', function() {
@@ -113,8 +148,16 @@ class App extends Component {
     }
   }
 
+  componentWillUnmount() {
+    this.unregisterAuthObserver();
+  }
+
   fabClickHandler() {
-    this.setState({creatingTransaction: true});
+    this.setState({creatingTransaction: true, displayLoginForm: false});
+  }
+
+  loginButtonClickHandler() {
+    this.setState({displayLoginForm: true, creatingTransaction: false});
   }
 
   createTransaction() {
@@ -143,6 +186,8 @@ class App extends Component {
         cancelCreatingTransaction={this.cancelCreatingTransaction} 
         createTransaction={this.createTransaction}
       />;
+    } else if (this.state.displayLoginForm) {
+      renderingPage = <LoginForm />
     } else {
       renderingPage = <TransactionOverview 
         transactions={this.state.transactions} 
@@ -153,9 +198,12 @@ class App extends Component {
 
     return (
       <div>
-        <Nav />       
+        <Nav loginButtonClickHandler={this.loginButtonClickHandler} />       
         <div className="container" >
           {renderingPage}
+          {this.state.db && 
+            <StyledFirebaseAuth uiConfig={this.uiConfig} firebaseAuth={firebase.auth()} />
+          }
         </div>
       </div>
     );
