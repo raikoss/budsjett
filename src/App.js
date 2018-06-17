@@ -9,7 +9,6 @@ import TransactionOverview from "./components/TransactionOverview";
 import Nav from "./components/Nav";
 import LoginForm from "./components/LoginForm";
 
-import StyledFirebaseAuth from "react-firebaseui/StyledFirebaseAuth";
 import firebase from "firebase";
 // Required for side-effects
 require("firebase/firestore");
@@ -33,6 +32,7 @@ class App extends Component {
     this.cancelCreatingTransaction = this.cancelCreatingTransaction.bind(this);
     this.createTransaction = this.createTransaction.bind(this);
     this.loginButtonClickHandler = this.loginButtonClickHandler.bind(this);
+    this.onFirebaseAuthStateChanged = this.onFirebaseAuthStateChanged.bind(this);
   }
 
   // addUser(user) {
@@ -79,32 +79,19 @@ class App extends Component {
   }
 
   initFirebaseAuth() {
-    this.uiConfig = {
-      // Popup signin flow rather than redirect flow.
-      signInFlow: 'popup',
-      // We will display Google and Facebook as auth providers.
-      signInOptions: [
-        firebase.auth.GoogleAuthProvider.PROVIDER_ID,
-        firebase.auth.FacebookAuthProvider.PROVIDER_ID, 
-        firebase.auth.EmailAuthProvider.PROVIDER_ID
-      ],
-      callbacks: {
-        // Avoid redirects after sign-in.
-        signInSuccessWithAuthResult: (authResult) => {
-          console.log(authResult);
-          return false;
-        }
-      }
-    }
+    
+  }
 
-    this.unregisterAuthObserver = firebase.auth().onAuthStateChanged((user) => {
-      this.setState({user: {
+  onFirebaseAuthStateChanged(user) {
+    this.setState({
+      user: {
         id: user.uid, 
         name: user.displayName, 
         email: user.email, 
         phoneNumber: user.phoneNumber
-      }})
-    });
+      }, 
+      displayLoginForm: false
+    })
   }
 
   componentDidMount() {
@@ -149,7 +136,7 @@ class App extends Component {
   }
 
   componentWillUnmount() {
-    this.unregisterAuthObserver();
+    // this.unregisterAuthObserver();
   }
 
   fabClickHandler() {
@@ -180,6 +167,7 @@ class App extends Component {
     let renderingPage = null;
 
     if (this.state.creatingTransaction) {
+      // ----- ADD TRANSACTION FORM ------
       renderingPage = <ChangeBalanceForm 
         adding={true} 
         categories={this.state.categories} 
@@ -187,8 +175,14 @@ class App extends Component {
         createTransaction={this.createTransaction}
       />;
     } else if (this.state.displayLoginForm) {
-      renderingPage = <LoginForm />
+      // ---- LOGIN FORM -----
+      renderingPage = <LoginForm 
+        firebaseAuth={firebase.auth()} 
+        providers={[firebase.auth.EmailAuthProvider.PROVIDER_ID]}
+        onFirebaseAuthStateChanged={this.onFirebaseAuthStateChanged}
+      />
     } else {
+      // ----- TRANSACTION OVERVIEW -----
       renderingPage = <TransactionOverview 
         transactions={this.state.transactions} 
         fetching={this.state.fetchingTransactions}
@@ -201,9 +195,6 @@ class App extends Component {
         <Nav loginButtonClickHandler={this.loginButtonClickHandler} />       
         <div className="container" >
           {renderingPage}
-          {this.state.db && 
-            <StyledFirebaseAuth uiConfig={this.uiConfig} firebaseAuth={firebase.auth()} />
-          }
         </div>
       </div>
     );
