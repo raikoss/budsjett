@@ -1,3 +1,12 @@
+.transactions-container {
+    margin: 10px 0;
+}
+
+.transaction {
+    margin: 5px 0;
+    min-height: 40px;
+}
+
 .positive {
     background-color: #20FF20;
 }

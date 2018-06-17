@@ -58,14 +58,18 @@ class ChangeBalanceForm extends Component {
     render() {
         return (
             <div className="row">
-                <div className="col s8 offset-s2 z-depth-3" style={{borderRadius: "3px"}}>
-                    <div className="balance-form-container">
-                        <a className="waves-effect waves-light btn" onClick={this.props.cancelCreatingTransaction}>Tilbake</a>
-                        <div className="input-field">
-                            <input id="amount" className="validate" type="number" value={this.state.amount} onChange={event => this.setState({amount: event.target.value.replace(/\D/,'')})} name="amount" />
-                            <label htmlFor="amount">Amount</label>
+                <div className="col s12 m10 l8 offset-m1 offset-l2 z-depth-1" style={{borderRadius: "3px"}}>
+                    <div className="balance-form-container row">
+                        <div>
+                            <a className="waves-effect waves-light btn col s12 center-align" onClick={this.props.cancelCreatingTransaction}>Tilbake</a>
                         </div>
-                        <div className="input-field">
+                        <div className="col s12 m4">
+                            <div className="input-field">
+                                <input id="amount" className="validate" type="number" value={this.state.amount} onChange={event => this.setState({amount: event.target.value.replace(/\D/,'')})} name="amount" />
+                                <label htmlFor="amount">Amount</label>
+                            </div>
+                        </div>
+                        <div className="input-field col s12 m8">
                             <select id="category" className="browser-default" value={this.state.categoryId} onChange={this.handleChange} name="categoryId">
                                 {/* <option value="0" disabled>Kategori</option>
                                 <option value="1">Fyll og fanteri</option>
@@ -77,11 +81,13 @@ class ChangeBalanceForm extends Component {
                             </select>
                             <label htmlFor="category">Category</label>
                         </div>
-                        <div className="input-field">
-                            <input id="comment" className="validate" type="text" value={this.state.comment} onChange={this.handleChange} name="comment" />
-                            <label htmlFor="comment">Comment</label>
+                        <div className="col s12">
+                            <div className="input-field">
+                                <input id="comment" className="validate" type="text" value={this.state.comment} onChange={this.handleChange} name="comment" />
+                                <label htmlFor="comment">Comment</label>
+                            </div>
                         </div>
-                        <a className="waves-effect waves-light btn" onClick={this.createTransaction}>Legg til</a>
+                        <a className="waves-effect waves-light btn col s4 offset-s4" onClick={this.createTransaction}>Legg til</a>
                     </div>
                 </div>
             </div>

@@ -1,5 +1,7 @@
 import React, {Component} from "react";
 import "../styles/transactionOverview.css";
+import Spinner from "./Spinner";
+import Transaction from "./Transaction";
 
 class TransactionOverview extends Component {
     constructor(props) {
@@ -83,38 +85,16 @@ class TransactionOverview extends Component {
         </div>;
 
         const page = this.props.fetching ? 
-        <div className="center-align">
-            <div className="preloader-wrapper active">
-                <div className="spinner-layer spinner-blue-only">
-                    <div className="circle-clipper left">
-                        <div className="circle"></div>
-                    </div><div className="gap-patch">
-                        <div className="circle"></div>
-                    </div><div className="circle-clipper right">
-                        <div className="circle"></div>
-                    </div>
-                </div>
-            </div> 
+        <div className="center-align" style={{margin: "10px 0"}}>
+            <Spinner />
         </div>
         : 
         <div className="transactions-container">
         {this.props.transactions.map(transaction =>
-            <div className={"transaction row " + (transaction.adding ? "positive" : "negative")} key={transaction.id}>
-                <div className="col s2">
-                    {transaction.categoryId}
-                </div>
-                <div className="col s6">
-                    {transaction.comment}
-                </div>
-                <div className="col s4">
-                    {transaction.amount}
-                </div>
-            </div>
+            <Transaction transaction={transaction} key={transaction.id} />
         )}
         </div>
 
-
-        
         return (
             <div>
                 {fab}
