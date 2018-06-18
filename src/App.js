@@ -19,20 +19,23 @@ class App extends Component {
 
     this.state = {
       db: null, 
-      creatingTransaction: false, 
+      displayCreateTransactionForm: false, 
       transactions: [], 
       fetchingTransactions: true, 
       categories: [], 
-      displayLoginForm: false, 
-      user: null
+      displayLoginForm: true, 
+      user: null, 
+      firebaseAuth: null, 
+      displayTransactionOverview: false
     }
 
     // this.addUser = this.addUser.bind(this);
     this.fabClickHandler = this.fabClickHandler.bind(this);
-    this.cancelCreatingTransaction = this.cancelCreatingTransaction.bind(this);
+    this.cancelTransactionForm = this.cancelTransactionForm.bind(this);
     this.createTransaction = this.createTransaction.bind(this);
     this.loginButtonClickHandler = this.loginButtonClickHandler.bind(this);
     this.onFirebaseAuthStateChanged = this.onFirebaseAuthStateChanged.bind(this);
+    this.disableLoginForm = this.disableLoginForm.bind(this);
   }
 
   // addUser(user) {
@@ -59,7 +62,7 @@ class App extends Component {
   //   });
   // }
 
-  initFirestore() {
+  initFirebase() {
     var config = {
       apiKey: "AIzaSyAOxRxd8EpD2m_q5uJebxp0syDEUaObx0U",
       authDomain: "budsjett-235ad.firebaseapp.com",
@@ -74,8 +77,11 @@ class App extends Component {
     const db = firebase.firestore();
     const settings = {timestampsInSnapshots: true};
     db.settings(settings);
+
+    // Firebase Auth
+    const firebaseAuth = firebase.auth();
     
-    this.setState({db});
+    this.setState({db, firebaseAuth});
   }
 
   initFirebaseAuth() {
@@ -89,14 +95,18 @@ class App extends Component {
         name: user.displayName, 
         email: user.email, 
         phoneNumber: user.phoneNumber
-      }, 
-      displayLoginForm: false
-    })
+      }
+    }, () => console.log("Set state user"))
+  }
+
+  disableLoginForm() {
+    this.setState({displayLoginForm: false, displayTransactionOverview: true}, () => console.log("Disabled loginform"));
   }
 
   componentDidMount() {
-    this.initFirestore();
-    this.initFirebaseAuth();
+    this.initFirebase();
+    // this.initFirestore();
+    // this.initFirebaseAuth();
 
     // FAB
     document.addEventListener('DOMContentLoaded', function() {
@@ -140,11 +150,11 @@ class App extends Component {
   }
 
   fabClickHandler() {
-    this.setState({creatingTransaction: true, displayLoginForm: false});
+    this.setState({displayCreateTransactionForm: true, displayLoginForm: false});
   }
 
   loginButtonClickHandler() {
-    this.setState({displayLoginForm: true, creatingTransaction: false});
+    this.setState({displayLoginForm: true, displayCreateTransactionForm: false});
   }
 
   createTransaction() {
@@ -159,27 +169,28 @@ class App extends Component {
     });
   }
 
-  cancelCreatingTransaction() {
-    this.setState({creatingTransaction: false});
+  cancelTransactionForm() {
+    this.setState({displayCreateTransactionForm: false, displayTransactionOverview: true});
   }
 
   render() {
     let renderingPage = null;
 
-    if (this.state.creatingTransaction) {
+    if (this.state.displayCreateTransactionForm) {
       // ----- ADD TRANSACTION FORM ------
       renderingPage = <ChangeBalanceForm 
         adding={true} 
         categories={this.state.categories} 
-        cancelCreatingTransaction={this.cancelCreatingTransaction} 
+        cancelTransactionForm={this.cancelTransactionForm} 
         createTransaction={this.createTransaction}
       />;
     } else if (this.state.displayLoginForm) {
       // ---- LOGIN FORM -----
       renderingPage = <LoginForm 
-        firebaseAuth={firebase.auth()} 
+        firebaseAuth={this.state.firebaseAuth} 
         providers={[firebase.auth.EmailAuthProvider.PROVIDER_ID]}
         onFirebaseAuthStateChanged={this.onFirebaseAuthStateChanged}
+        disableLoginForm={this.disableLoginForm}
       />
     } else {
       // ----- TRANSACTION OVERVIEW -----
@@ -192,7 +203,10 @@ class App extends Component {
 
     return (
       <div>
-        <Nav loginButtonClickHandler={this.loginButtonClickHandler} />       
+        <Nav 
+          loginButtonClickHandler={this.loginButtonClickHandler} 
+          user={this.state.user}
+        />       
         <div className="container" >
           {renderingPage}
         </div>
