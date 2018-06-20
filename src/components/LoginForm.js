@@ -9,7 +9,7 @@ class LoginForm extends Component {
       finishedAuthenticating: false
     }
     
-    this.unregisterAuthObserver = null;
+    this.observer = null;
   }
 
   uiConfig = {
@@ -40,31 +40,34 @@ class LoginForm extends Component {
   }
 
   componentDidUpdate(prevProps) {
-    if (this.props.firebaseAuth !== prevProps.firebaseAuth && this.unregisterAuthObserver === null) {
+    console.log("Updated props", this.props);
+    if (this.props.firebaseAuth.currentUser) {
       console.log("Current props", this.props);
       console.log("Prevprops", prevProps);
-      this.unregisterAuthObserver = this.props.firebaseAuth.onAuthStateChanged((user) => {
+      this.observer = this.props.firebaseAuth.onAuthStateChanged((user, error, completed) => {
         if (user) {
-          console.log("Auth state changed!");
-          // this.props.onFirebaseAuthStateChanged(user);
+          console.log("Auth state changed!", user);
+          this.props.onFirebaseAuthStateChanged(user);
           this.setState({finishedAuthenticating: true})
           
+          completed(() => {
+            console.log('The thing was removed');
+          })
           // this.props.disableLoginForm();
         }
       })
 
+      // this.unregisterAuthObserver();
+
       // console.log(this.unregisterAuthObserver);
-    }
-    
-    if (this.state.finishedAuthenticating) {
-      console.log("The thing is done");
     }
   }
 
   componentWillUnmount() {
     console.log("Unmounting");
-    console.log(this.unregisterAuthObserver);
-    console.log(this.unregisterAuthObserver()); 
+    // console.log(this.unregisterAuthObserver);
+    this.observer(); 
+    this.observer = null;
     // console.log("Unmounting", this.unregisterAuthObserver());
   }
 

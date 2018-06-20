@@ -1,8 +1,8 @@
 import React, { Component } from 'react';
 import logo from './logo.svg';
 import './App.css';
-import '../node_modules/materialize-css/dist/css/materialize.min.css';
-import '../node_modules/materialize-css/dist/js/materialize.min.js';
+// import '../node_modules/materialize-css/dist/css/materialize.min.css';
+// import '../node_modules/materialize-css/dist/js/materialize.min.js';
 import ChangeBalanceForm from "./components/ChangeBalanceForm";
 import Chart from "./components/Chart";
 import TransactionOverview from "./components/TransactionOverview";
@@ -84,18 +84,17 @@ class App extends Component {
     this.setState({db, firebaseAuth});
   }
 
-  initFirebaseAuth() {
-    
-  }
-
   onFirebaseAuthStateChanged(user) {
+    console.log('Changed auth state');
     this.setState({
       user: {
         id: user.uid, 
         name: user.displayName, 
         email: user.email, 
         phoneNumber: user.phoneNumber
-      }
+      }, 
+      displayLoginForm: false, 
+      displayTransactionOverview: true
     }, () => console.log("Set state user"))
   }
 
@@ -105,8 +104,6 @@ class App extends Component {
 
   componentDidMount() {
     this.initFirebase();
-    // this.initFirestore();
-    // this.initFirebaseAuth();
 
     // FAB
     document.addEventListener('DOMContentLoaded', function() {
@@ -192,7 +189,7 @@ class App extends Component {
         onFirebaseAuthStateChanged={this.onFirebaseAuthStateChanged}
         disableLoginForm={this.disableLoginForm}
       />
-    } else {
+    } else if (this.state.displayTransactionOverview) {
       // ----- TRANSACTION OVERVIEW -----
       renderingPage = <TransactionOverview 
         transactions={this.state.transactions} 
