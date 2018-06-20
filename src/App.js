@@ -1,8 +1,5 @@
 import React, { Component } from 'react';
-import logo from './logo.svg';
 import './App.css';
-// import '../node_modules/materialize-css/dist/css/materialize.min.css';
-// import '../node_modules/materialize-css/dist/js/materialize.min.js';
 import ChangeBalanceForm from "./components/ChangeBalanceForm";
 import Chart from "./components/Chart";
 import TransactionOverview from "./components/TransactionOverview";
@@ -10,6 +7,7 @@ import Nav from "./components/Nav";
 import LoginForm from "./components/LoginForm";
 
 import firebase from "firebase";
+import Spinner from './components/Spinner';
 // Required for side-effects
 require("firebase/firestore");
 
@@ -26,7 +24,8 @@ class App extends Component {
       displayLoginForm: true, 
       user: null, 
       firebaseAuth: null, 
-      displayTransactionOverview: false
+      displayTransactionOverview: false, 
+      initialLoading: true
     }
 
     // this.addUser = this.addUser.bind(this);
@@ -34,33 +33,10 @@ class App extends Component {
     this.cancelTransactionForm = this.cancelTransactionForm.bind(this);
     this.createTransaction = this.createTransaction.bind(this);
     this.loginButtonClickHandler = this.loginButtonClickHandler.bind(this);
-    this.onFirebaseAuthStateChanged = this.onFirebaseAuthStateChanged.bind(this);
+    this.logoutButtonClickHandler = this.logoutButtonClickHandler.bind(this);
+    // this.onFirebaseAuthStateChanged = this.onFirebaseAuthStateChanged.bind(this);
     this.disableLoginForm = this.disableLoginForm.bind(this);
   }
-
-  // addUser(user) {
-  //   this.state.db.collection("users").add({
-  //     first: user.first,
-  //     middle: user.middle, 
-  //     last: user.last,
-  //     born: user.born
-  //   })
-  //   .then(function(docRef) {
-  //       console.log("Document written with ID: ", docRef.id);
-  //   })
-  //   .catch(function(error) {
-  //       console.error("Error adding document: ", error);
-  //   });
-  // }
-
-  // showUsers() {
-  //   this.state.db.collection("users").get()
-  //   .then((querySnapshot) => {
-  //     querySnapshot.forEach((doc) => {
-  //       console.log(`${doc.id} => `, doc.data());
-  //     });
-  //   });
-  // }
 
   initFirebase() {
     var config = {
@@ -80,12 +56,29 @@ class App extends Component {
 
     // Firebase Auth
     const firebaseAuth = firebase.auth();
+    firebaseAuth.onAuthStateChanged(user => {
+      if (user) {
+        this.setState({
+          user: {
+            uid: user.uid, 
+            name: user.displayName, 
+            email: user.email, 
+            phoneNumber: user.phoneNumber
+          }, 
+          initialLoading: false
+        })
+      } else {
+        this.setState({
+          initialLoading: false
+        })
+      }
+    })
     
     this.setState({db, firebaseAuth});
   }
 
-  onFirebaseAuthStateChanged(user) {
-    console.log('Changed auth state');
+  onLogin = () => {
+    const user = this.state.firebaseAuth.currentUser;
     this.setState({
       user: {
         id: user.uid, 
@@ -95,7 +88,7 @@ class App extends Component {
       }, 
       displayLoginForm: false, 
       displayTransactionOverview: true
-    }, () => console.log("Set state user"))
+    })
   }
 
   disableLoginForm() {
@@ -109,12 +102,6 @@ class App extends Component {
     document.addEventListener('DOMContentLoaded', function() {
       const elems = document.querySelectorAll('.fixed-action-btn');
       window.M.FloatingActionButton.init(elems, {});
-    });
-
-    // Nav
-    document.addEventListener('DOMContentLoaded', function() {
-      const elems = document.querySelectorAll('.sidenav');
-      window.M.Sidenav.init(elems, {});
     });
   }
 
@@ -142,16 +129,22 @@ class App extends Component {
     }
   }
 
-  componentWillUnmount() {
-    // this.unregisterAuthObserver();
-  }
-
   fabClickHandler() {
     this.setState({displayCreateTransactionForm: true, displayLoginForm: false});
   }
 
   loginButtonClickHandler() {
     this.setState({displayLoginForm: true, displayCreateTransactionForm: false});
+  }
+
+  logoutButtonClickHandler() {
+    this.state.firebaseAuth.signOut()
+    .then(() => {
+      this.setState({displayLoginForm: true, displayCreateTransactionForm: false, user: null});
+    })
+    .catch(error => {
+      console.log("Couldn't sign out!");
+    })
   }
 
   createTransaction() {
@@ -173,42 +166,49 @@ class App extends Component {
   render() {
     let renderingPage = null;
 
-    if (this.state.displayCreateTransactionForm) {
-      // ----- ADD TRANSACTION FORM ------
-      renderingPage = <ChangeBalanceForm 
+    if (this.state.user) {
+      if (this.state.displayCreateTransactionForm) {
+        // ----- ADD TRANSACTION FORM ------
+        renderingPage = <ChangeBalanceForm 
         adding={true} 
         categories={this.state.categories} 
         cancelTransactionForm={this.cancelTransactionForm} 
         createTransaction={this.createTransaction}
-      />;
-    } else if (this.state.displayLoginForm) {
+        />;
+    } else {
+        // ----- TRANSACTION OVERVIEW -----
+        renderingPage = <TransactionOverview 
+          transactions={this.state.transactions} 
+          fetching={this.state.fetchingTransactions}
+          fabClickHandler={this.fabClickHandler} 
+        />;
+      }
+    } else {
       // ---- LOGIN FORM -----
       renderingPage = <LoginForm 
-        firebaseAuth={this.state.firebaseAuth} 
-        providers={[firebase.auth.EmailAuthProvider.PROVIDER_ID]}
-        onFirebaseAuthStateChanged={this.onFirebaseAuthStateChanged}
-        disableLoginForm={this.disableLoginForm}
+      firebaseAuth={this.state.firebaseAuth} 
+      providers={[firebase.auth.EmailAuthProvider.PROVIDER_ID]}
+      onLogin={this.onLogin}
+      disableLoginForm={this.disableLoginForm}
       />
-    } else if (this.state.displayTransactionOverview) {
-      // ----- TRANSACTION OVERVIEW -----
-      renderingPage = <TransactionOverview 
-        transactions={this.state.transactions} 
-        fetching={this.state.fetchingTransactions}
-        fabClickHandler={this.fabClickHandler} 
-      />;
     }
 
-    return (
-      <div>
-        <Nav 
-          loginButtonClickHandler={this.loginButtonClickHandler} 
-          user={this.state.user}
-        />       
-        <div className="container" >
-          {renderingPage}
+    if (!this.state.initialLoading) {
+      return (
+        <div>
+          <Nav 
+            loginButtonClickHandler={this.loginButtonClickHandler} 
+            logoutButtonClickHandler={this.logoutButtonClickHandler} 
+            user={this.state.user}
+          />       
+          <div className="container" >
+            {renderingPage}
+          </div>
         </div>
-      </div>
-    );
+      )
+    } else {
+      return null
+    }
   }
 }
 
