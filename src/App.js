@@ -57,6 +57,7 @@ class App extends Component {
     // Firebase Auth
     const firebaseAuth = firebase.auth();
     firebaseAuth.onAuthStateChanged(user => {
+      console.log("State changed!", user);
       if (user) {
         this.setState({
           user: {
@@ -186,10 +187,11 @@ class App extends Component {
     } else {
       // ---- LOGIN FORM -----
       renderingPage = <LoginForm 
-      firebaseAuth={this.state.firebaseAuth} 
-      providers={[firebase.auth.EmailAuthProvider.PROVIDER_ID]}
-      onLogin={this.onLogin}
-      disableLoginForm={this.disableLoginForm}
+        firebaseAuth={this.state.firebaseAuth} 
+        providers={[firebase.auth.EmailAuthProvider.PROVIDER_ID]}
+        onLogin={this.onLogin}
+        disableLoginForm={this.disableLoginForm}
+        updateNameHandler={(displayName) => this.setState({user: {...this.state.user, name: displayName}})}
       />
     }
 
