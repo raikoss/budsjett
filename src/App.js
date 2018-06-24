@@ -22,7 +22,7 @@ class App extends Component {
       fetchingTransactions: true, 
       categories: [], 
       displayLoginForm: true, 
-      user: null, 
+      // user: null, 
       firebaseAuth: null, 
       displayTransactionOverview: false, 
       initialLoading: true
@@ -59,15 +59,47 @@ class App extends Component {
     firebaseAuth.onAuthStateChanged(user => {
       console.log("State changed!", user);
       if (user) {
+        const usersRef = this.state.db.collection("users");
+        console.log("Checking for uid", user.uid);
+        usersRef
+        .where("uid", "==", user.uid)
+        .limit(1)
+        .get()
+        .then(querySnapshot => {
+          console.log(querySnapshot);
+          querySnapshot.forEach(doc => {
+            console.log(doc.data());
+          })
+          // if (doc.exists) {
+          //   console.log("Got document for user", doc);
+          // } else {
+          //   console.log("Doc doesn't exist omg");
+          // }
+
+          // querySnapshot.forEach((doc) => {
+          //   // transactions.push({...doc.data(), id: doc.id});
+          //   console.log(`${doc.id} => `, doc.data());
+          //   usersRef.doc(doc.id).collection("budgets").get()
+          //   .then(snapshot => {
+          //     snapshot.forEach(budgetDoc => {
+          //       console.log(`${budgetDoc.id} => `, budgetDoc.data());
+          //     })
+          //   })
+          // });
+          // this.setState({transactions, fetchingTransactions: false});
+        });
         this.setState({
-          user: {
-            uid: user.uid, 
-            name: user.displayName, 
-            email: user.email, 
-            phoneNumber: user.phoneNumber
-          }, 
+          // user: {
+          //   uid: user.uid, 
+          //   name: user.displayName, 
+          //   email: user.email, 
+          //   phoneNumber: user.phoneNumber
+          // }, 
           initialLoading: false
         })
+        
+        this.fetchTransactions();
+        this.fetchCategories();
       } else {
         this.setState({
           initialLoading: false
@@ -81,12 +113,12 @@ class App extends Component {
   onLogin = () => {
     const user = this.state.firebaseAuth.currentUser;
     this.setState({
-      user: {
-        id: user.uid, 
-        name: user.displayName, 
-        email: user.email, 
-        phoneNumber: user.phoneNumber
-      }, 
+      // user: {
+      //   id: user.uid, 
+      //   name: user.displayName, 
+      //   email: user.email, 
+      //   phoneNumber: user.phoneNumber
+      // }, 
       displayLoginForm: false, 
       displayTransactionOverview: true
     })
@@ -100,10 +132,8 @@ class App extends Component {
     this.initFirebase();
 
     // FAB
-    document.addEventListener('DOMContentLoaded', function() {
-      const elems = document.querySelectorAll('.fixed-action-btn');
-      window.M.FloatingActionButton.init(elems, {});
-    });
+    const elems = document.querySelectorAll('.fixed-action-btn');
+    window.M.FloatingActionButton.init(elems, {});
   }
 
   fetchTransactions() {
@@ -124,10 +154,10 @@ class App extends Component {
   }
 
   componentDidUpdate(prevProps, prevState) {
-    if (prevState.db !== this.state.db) {
-      this.fetchTransactions();
-      this.fetchCategories();
-    }
+    // if (!prevState.firebaseAuth.currentUser && this.state.firebaseAuth.currentUser) {
+      
+
+    // }
   }
 
   fabClickHandler() {
@@ -141,10 +171,10 @@ class App extends Component {
   logoutButtonClickHandler() {
     this.state.firebaseAuth.signOut()
     .then(() => {
-      this.setState({displayLoginForm: true, displayCreateTransactionForm: false, user: null});
+      this.setState({displayLoginForm: true, displayCreateTransactionForm: false});
     })
     .catch(error => {
-      console.log("Couldn't sign out!");
+      console.log("Couldn't sign out!", error);
     })
   }
 
@@ -167,33 +197,36 @@ class App extends Component {
   render() {
     let renderingPage = null;
 
-    if (this.state.user) {
-      if (this.state.displayCreateTransactionForm) {
-        // ----- ADD TRANSACTION FORM ------
-        renderingPage = <ChangeBalanceForm 
-        adding={true} 
-        categories={this.state.categories} 
-        cancelTransactionForm={this.cancelTransactionForm} 
-        createTransaction={this.createTransaction}
-        />;
-    } else {
-        // ----- TRANSACTION OVERVIEW -----
-        renderingPage = <TransactionOverview 
-          transactions={this.state.transactions} 
-          fetching={this.state.fetchingTransactions}
-          fabClickHandler={this.fabClickHandler} 
-        />;
+    if (this.state.db && this.state.firebaseAuth) {
+      if (this.state.firebaseAuth.currentUser) {
+        if (this.state.displayCreateTransactionForm) {
+          // ----- ADD TRANSACTION FORM ------
+          renderingPage = <ChangeBalanceForm 
+          adding={true} 
+          categories={this.state.categories} 
+          cancelTransactionForm={this.cancelTransactionForm} 
+          createTransaction={this.createTransaction}
+          />;
+      } else {
+          // ----- TRANSACTION OVERVIEW -----
+          renderingPage = <TransactionOverview 
+            transactions={this.state.transactions} 
+            fetching={this.state.fetchingTransactions}
+            fabClickHandler={this.fabClickHandler} 
+          />;
+        }
+      } else {
+        // ---- LOGIN FORM -----
+        renderingPage = <LoginForm 
+          firebaseAuth={this.state.firebaseAuth} 
+          providers={[firebase.auth.EmailAuthProvider.PROVIDER_ID]}
+          onLogin={this.onLogin}
+          disableLoginForm={this.disableLoginForm}
+          usersDocRef={this.state.db.collection("users")}
+          // updateNameHandler={(displayName) => this.setState({user: {...this.state.user, name: displayName}})}
+        />
       }
-    } else {
-      // ---- LOGIN FORM -----
-      renderingPage = <LoginForm 
-        firebaseAuth={this.state.firebaseAuth} 
-        providers={[firebase.auth.EmailAuthProvider.PROVIDER_ID]}
-        onLogin={this.onLogin}
-        disableLoginForm={this.disableLoginForm}
-        updateNameHandler={(displayName) => this.setState({user: {...this.state.user, name: displayName}})}
-      />
-    }
+    }    
 
     if (!this.state.initialLoading) {
       return (
@@ -201,7 +234,7 @@ class App extends Component {
           <Nav 
             loginButtonClickHandler={this.loginButtonClickHandler} 
             logoutButtonClickHandler={this.logoutButtonClickHandler} 
-            user={this.state.user}
+            user={this.state.firebaseAuth.currentUser}
           />       
           <div className="container" >
             {renderingPage}

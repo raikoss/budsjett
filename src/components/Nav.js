@@ -2,24 +2,46 @@ import React, {Component} from 'react';
 import "../styles/nav.css";
 
 class Nav extends Component {
+  constructor(props) {
+    super(props);
+
+    this.links = [
+      this.props.user ? {
+        onClick: this.props.logoutButtonClickHandler, 
+        text: 'Logg ut'
+      } : {
+        onClick: this.props.loginButtonClickHandler, 
+        text: 'Logg inn'
+      }
+    ]
+  }
 
   componentDidMount() {
-    // Nav
-    document.addEventListener('DOMContentLoaded', function() {
-      const elems = document.querySelectorAll('.sidenav');
-      window.M.Sidenav.init(elems, {});
-    });
+    const elems = document.querySelectorAll('.sidenav');
+    window.M.Sidenav.init(elems, {});
   }
 
   componentDidUpdate() {
-    // Nav
-    document.addEventListener('DOMContentLoaded', function() {
-      const elems = document.querySelectorAll('.sidenav');
-      window.M.Sidenav.init(elems, {});
-    });
+    if (this.props.user) {
+      this.links[0] = {
+        onClick: this.props.logoutButtonClickHandler, 
+        text: 'Logg ut'
+      }
+    } else {
+      this.links[0] = {
+        onClick: this.props.loginButtonClickHandler, 
+        text: 'Logg inn'
+      }
+    }
   }
 
   render() {
+    const links = this.links.map((link, i) => {
+      return (
+        <li key={i}><a href={link.href} onClick={link.onClick}>{link.text}</a></li>
+      )
+    })
+
     return (
       <div>
         <div style={{marginBottom: "20px"}}>
@@ -29,11 +51,7 @@ class Nav extends Component {
                 <a href="#!" className="brand-logo">Logo</a>
                 <a href="#" data-target="mobile-demo" className="sidenav-trigger"><i className="material-icons">menu</i></a>
                 <ul className="right hide-on-med-and-down">
-                {this.props.user ? 
-                  <li><a href="#" onClick={this.props.logoutButtonClickHandler}>Logg ut</a></li>
-                  :
-                  <li><a href="#" onClick={this.props.loginButtonClickHandler}>Logg inn</a></li>
-                }
+                  {links}
                 </ul>
               </div>
             </div>
@@ -42,16 +60,16 @@ class Nav extends Component {
           {this.props.user && 
             <div className='right-align container'>
               <p style={{margin: 0}}>
-                <span className="username z-depth-1">{this.props.user.name}</span>
+                <span className="username z-depth-1">{this.props.user.displayName}</span>
               </p>
             </div>
           }
         </div>
 
-
         <ul className="sidenav" id="mobile-demo">
-          <li><a href="sass.html">Sass</a></li>
+          {links}
         </ul>
+
       </div>
     )
   }
