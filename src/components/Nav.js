@@ -43,14 +43,14 @@ class Nav extends Component {
   render() {
     const links = this.state.links.map((link, i) => {
       return (
-        <li key={i}><a href={link.href} onClick={link.onClick}>{link.text}</a></li>
+        <li key={i}><a  onClick={link.onClick}>{link.text}</a></li>
       )
     })
 
     if (this.props.user) {
       links.unshift(
         <li key="logout-key">
-          <a href="#" onClick={this.props.logoutButtonClickHandler}>Logg ut</a>
+          <a onClick={this.props.logoutButtonClickHandler}>Logg ut</a>
         </li>
       );
     } else {
@@ -62,9 +62,9 @@ class Nav extends Component {
     }
 
     return (
-      <div>
+      <header>
         <div style={{marginBottom: "20px"}}>
-          <nav style={{backgroundColor: "#08d36e"}}>
+          <nav>
             <div className="container">
               <div className="nav-wrapper">
                 <a href="#!" className="brand-logo">Logo</a>
@@ -89,7 +89,7 @@ class Nav extends Component {
           {links}
         </ul>
 
-      </div>
+      </header>
     )
   }
 }

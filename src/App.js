@@ -5,6 +5,7 @@ import Chart from "./components/Chart";
 import TransactionOverview from "./components/TransactionOverview";
 import Nav from "./components/Nav";
 import LoginForm from "./components/LoginForm";
+import Footer from "./components/Footer";
 
 import firebase from "firebase";
 import Spinner from './components/Spinner';
@@ -25,6 +26,7 @@ class App extends Component {
       displayLoginForm: true, 
       user: null, 
       budget: null,
+      displayBudget: false, 
       firebaseAuth: null, 
       displayTransactionOverview: false, 
       initialLoading: true
@@ -36,8 +38,6 @@ class App extends Component {
     this.createTransaction = this.createTransaction.bind(this);
     this.loginButtonClickHandler = this.loginButtonClickHandler.bind(this);
     this.logoutButtonClickHandler = this.logoutButtonClickHandler.bind(this);
-    // this.onFirebaseAuthStateChanged = this.onFirebaseAuthStateChanged.bind(this);
-    this.disableLoginForm = this.disableLoginForm.bind(this);
   }
 
   initFirebase() {
@@ -65,6 +65,7 @@ class App extends Component {
       if (user) {
         const usersRef = this.state.db.collection("users");
         console.log("Checking for uid", user.uid);
+        this.setState({user});
 
         const promise = usersRef
         .where("uid", "==", user.uid)
@@ -87,7 +88,7 @@ class App extends Component {
             console.log("Budget doc", doc);
           })
 
-          this.setState({initialLoading: false, user})
+          this.setState({initialLoading: false})
         })
 
         // this.setState({
@@ -111,24 +112,6 @@ class App extends Component {
     })
     
     this.setState({db, firebaseAuth});
-  }
-
-  onLogin = () => {
-    const user = this.state.firebaseAuth.currentUser;
-    this.setState({
-      // user: {
-      //   id: user.uid, 
-      //   name: user.displayName, 
-      //   email: user.email, 
-      //   phoneNumber: user.phoneNumber
-      // }, 
-      displayLoginForm: false, 
-      displayTransactionOverview: true
-    })
-  }
-
-  disableLoginForm() {
-    this.setState({displayLoginForm: false, displayTransactionOverview: true}, () => console.log("Disabled loginform"));
   }
 
   componentDidMount() {
@@ -156,25 +139,22 @@ class App extends Component {
     return;
   }
 
-  componentDidUpdate(prevProps, prevState) {
-    // if (!prevState.firebaseAuth.currentUser && this.state.firebaseAuth.currentUser) {
-      
+  saveBudget = () => {
 
-    // }
   }
 
   fabClickHandler() {
-    this.setState({displayCreateTransactionForm: true, displayLoginForm: false});
+    this.setState({displayCreateTransactionForm: true});
   }
 
   loginButtonClickHandler() {
-    this.setState({displayLoginForm: true, displayCreateTransactionForm: false});
+    this.setState({displayCreateTransactionForm: false});
   }
 
   logoutButtonClickHandler() {
     this.state.firebaseAuth.signOut()
     .then(() => {
-      this.setState({displayLoginForm: true, displayCreateTransactionForm: false});
+      this.setState({displayCreateTransactionForm: false});
     })
     .catch(error => {
       console.log("Couldn't sign out!", error);
@@ -205,11 +185,14 @@ class App extends Component {
       user={this.state.user}
     /> 
 
+    const footer = <Footer />
+
     if (this.state.db && this.state.firebaseAuth) {
       if (this.state.user) {
         if (!this.state.budget) {
           renderingPage = <CreateBudget
             firstTime={true}
+            saveBudget={this.saveBudget}
           />
         } else if (this.state.displayCreateTransactionForm) {
           // ----- ADD TRANSACTION FORM ------
@@ -240,27 +223,25 @@ class App extends Component {
       }
     }
 
-    if (!this.state.initialLoading) {
-      return (
-        <div>
-          {nav}
+    return (
+      <div>
+        { nav }
 
-          <div className="container" >
-            {renderingPage}
-          </div>
-        </div>
-      )
-    } else {
-      return (
-        <div>
-          {nav}
+        <main>
+          {!this.state.initialLoading ? 
+            <div className="container" >
+              {renderingPage}
+            </div>
+            : 
+            <div className="page-loader">
+              <Spinner />
+            </div>
+          }
+        </main>
 
-          <div className="page-loader">
-            <Spinner />
-          </div>
-        </div>
-      )
-    }
+        { footer }
+      </div>
+    )
   }
 }
 

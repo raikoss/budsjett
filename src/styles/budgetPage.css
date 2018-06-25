@@ -1,0 +1,30 @@
+.categories-container {
+  margin: 10px 0;
+}
+
+.no-categories {
+  text-align: center;
+  color: #AAA;
+}
+
+.edit-category {
+  margin: 10px 0;
+}
+
+.cancel-button {
+  background-color: #ef4637;
+  margin: 0 5px;
+}
+
+.cancel-button:hover {
+  background-color: #ee7e74;
+}
+
+.save-button {
+  background-color: #08d36e;
+  margin: 0 5px;
+}
+
+.save-button:hover {
+  background-color: #5cda9b;
+}
