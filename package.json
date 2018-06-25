@@ -9,6 +9,7 @@
     "materialize-css": "^1.0.0-rc.1",
     "react": "^16.4.0",
     "react-chartjs": "^1.2.0",
+    "react-color": "^2.14.1",
     "react-dom": "^16.4.0",
     "react-firebaseui": "^3.0.4",
     "react-scripts": "1.1.4"

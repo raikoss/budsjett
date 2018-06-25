@@ -5,15 +5,18 @@ class Nav extends Component {
   constructor(props) {
     super(props);
 
-    this.links = [
-      this.props.user ? {
-        onClick: this.props.logoutButtonClickHandler, 
-        text: 'Logg ut'
-      } : {
-        onClick: this.props.loginButtonClickHandler, 
-        text: 'Logg inn'
-      }
-    ]
+    this.state = {
+      links: []
+      // links: [
+      //   this.props.user ? {
+      //     onClick: this.props.logoutButtonClickHandler, 
+      //     text: 'Logg ut'
+      //   } : {
+      //     onClick: this.props.loginButtonClickHandler, 
+      //     text: 'Logg inn'
+      //   }
+      // ]
+    }
   }
 
   componentDidMount() {
@@ -22,25 +25,41 @@ class Nav extends Component {
   }
 
   componentDidUpdate() {
-    if (this.props.user) {
-      this.links[0] = {
-        onClick: this.props.logoutButtonClickHandler, 
-        text: 'Logg ut'
-      }
-    } else {
-      this.links[0] = {
-        onClick: this.props.loginButtonClickHandler, 
-        text: 'Logg inn'
-      }
-    }
+    // console.log("Nav updated", this.props.user);
+    // if (this.props.user) {
+    //   this.setState({})
+    //   this.links[0] = {
+    //     onClick: this.props.logoutButtonClickHandler, 
+    //     text: 'Logg ut'
+    //   }
+    // } else {
+    //   this.links[0] = {
+    //     onClick: this.props.loginButtonClickHandler, 
+    //     text: 'Logg inn'
+    //   }
+    // }
   }
 
   render() {
-    const links = this.links.map((link, i) => {
+    const links = this.state.links.map((link, i) => {
       return (
         <li key={i}><a href={link.href} onClick={link.onClick}>{link.text}</a></li>
       )
     })
+
+    if (this.props.user) {
+      links.unshift(
+        <li key="logout-key">
+          <a href="#" onClick={this.props.logoutButtonClickHandler}>Logg ut</a>
+        </li>
+      );
+    } else {
+      links.unshift(
+        <li key="login-key">
+          <a href="#" onClick={this.props.loginButtonClickHandler}>Logg inn</a>
+        </li>
+      );
+    }
 
     return (
       <div>

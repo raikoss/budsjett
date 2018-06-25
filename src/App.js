@@ -8,6 +8,7 @@ import LoginForm from "./components/LoginForm";
 
 import firebase from "firebase";
 import Spinner from './components/Spinner';
+import CreateBudget from './components/CreateBudget';
 // Required for side-effects
 require("firebase/firestore");
 
@@ -22,7 +23,8 @@ class App extends Component {
       fetchingTransactions: true, 
       categories: [], 
       displayLoginForm: true, 
-      // user: null, 
+      user: null, 
+      budget: null,
       firebaseAuth: null, 
       displayTransactionOverview: false, 
       initialLoading: true
@@ -58,51 +60,52 @@ class App extends Component {
     const firebaseAuth = firebase.auth();
     firebaseAuth.onAuthStateChanged(user => {
       console.log("State changed!", user);
+      this.setState({initialLoading: true});
+      
       if (user) {
         const usersRef = this.state.db.collection("users");
         console.log("Checking for uid", user.uid);
-        usersRef
+
+        const promise = usersRef
         .where("uid", "==", user.uid)
-        .limit(1)
         .get()
         .then(querySnapshot => {
-          console.log(querySnapshot);
-          querySnapshot.forEach(doc => {
-            console.log(doc.data());
-          })
-          // if (doc.exists) {
-          //   console.log("Got document for user", doc);
-          // } else {
-          //   console.log("Doc doesn't exist omg");
-          // }
+          const userDoc = querySnapshot.docs[0];
+          const userDocId = userDoc.id;
+          console.log(userDoc.data());
 
-          // querySnapshot.forEach((doc) => {
-          //   // transactions.push({...doc.data(), id: doc.id});
-          //   console.log(`${doc.id} => `, doc.data());
-          //   usersRef.doc(doc.id).collection("budgets").get()
-          //   .then(snapshot => {
-          //     snapshot.forEach(budgetDoc => {
-          //       console.log(`${budgetDoc.id} => `, budgetDoc.data());
-          //     })
-          //   })
-          // });
-          // this.setState({transactions, fetchingTransactions: false});
-        });
-        this.setState({
-          // user: {
-          //   uid: user.uid, 
-          //   name: user.displayName, 
-          //   email: user.email, 
-          //   phoneNumber: user.phoneNumber
-          // }, 
-          initialLoading: false
+          const budgetsRef = usersRef.doc(userDocId).collection("budgets");
+          return budgetsRef.get();
         })
+        .then(querySnapshot => {
+          if (querySnapshot.docs.length === 0) {
+            this.setState({budget: null})
+          }
+
+          console.log(querySnapshot.docs.length);
+          querySnapshot.forEach(doc => {
+            console.log("Budget doc", doc);
+          })
+
+          this.setState({initialLoading: false, user})
+        })
+
+        // this.setState({
+        //   // user: {
+        //   //   uid: user.uid, 
+        //   //   name: user.displayName, 
+        //   //   email: user.email, 
+        //   //   phoneNumber: user.phoneNumber
+        //   // }, 
+          
+        // })
         
-        this.fetchTransactions();
-        this.fetchCategories();
+        // this.fetchTransactions();
+        // this.fetchCategories();
       } else {
         this.setState({
-          initialLoading: false
+          initialLoading: false,
+          user: null
         })
       }
     })
@@ -196,16 +199,25 @@ class App extends Component {
 
   render() {
     let renderingPage = null;
+    const nav = <Nav 
+      loginButtonClickHandler={this.loginButtonClickHandler} 
+      logoutButtonClickHandler={this.logoutButtonClickHandler} 
+      user={this.state.user}
+    /> 
 
     if (this.state.db && this.state.firebaseAuth) {
-      if (this.state.firebaseAuth.currentUser) {
-        if (this.state.displayCreateTransactionForm) {
+      if (this.state.user) {
+        if (!this.state.budget) {
+          renderingPage = <CreateBudget
+            firstTime={true}
+          />
+        } else if (this.state.displayCreateTransactionForm) {
           // ----- ADD TRANSACTION FORM ------
           renderingPage = <ChangeBalanceForm 
-          adding={true} 
-          categories={this.state.categories} 
-          cancelTransactionForm={this.cancelTransactionForm} 
-          createTransaction={this.createTransaction}
+            adding={true} 
+            categories={this.state.categories} 
+            cancelTransactionForm={this.cancelTransactionForm} 
+            createTransaction={this.createTransaction}
           />;
       } else {
           // ----- TRANSACTION OVERVIEW -----
@@ -226,23 +238,28 @@ class App extends Component {
           // updateNameHandler={(displayName) => this.setState({user: {...this.state.user, name: displayName}})}
         />
       }
-    }    
+    }
 
     if (!this.state.initialLoading) {
       return (
         <div>
-          <Nav 
-            loginButtonClickHandler={this.loginButtonClickHandler} 
-            logoutButtonClickHandler={this.logoutButtonClickHandler} 
-            user={this.state.firebaseAuth.currentUser}
-          />       
+          {nav}
+
           <div className="container" >
             {renderingPage}
           </div>
         </div>
       )
     } else {
-      return null
+      return (
+        <div>
+          {nav}
+
+          <div className="page-loader">
+            <Spinner />
+          </div>
+        </div>
+      )
     }
   }
 }
