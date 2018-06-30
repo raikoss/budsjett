@@ -1,15 +1,17 @@
 import React, { Component } from 'react';
 import './App.css';
+
 import ChangeBalanceForm from "./components/ChangeBalanceForm";
 import Chart from "./components/Chart";
 import TransactionOverview from "./components/TransactionOverview";
 import Nav from "./components/Nav";
 import LoginForm from "./components/LoginForm";
 import Footer from "./components/Footer";
-
-import firebase from "firebase";
 import Spinner from './components/Spinner';
-import CreateBudget from './components/CreateBudget';
+import CreateBudget from './components/EditBudget';
+
+import moment from "moment";
+import firebase from "firebase";
 // Required for side-effects
 require("firebase/firestore");
 
@@ -32,12 +34,13 @@ class App extends Component {
       initialLoading: true
     }
 
-    // this.addUser = this.addUser.bind(this);
     this.fabClickHandler = this.fabClickHandler.bind(this);
     this.cancelTransactionForm = this.cancelTransactionForm.bind(this);
-    this.createTransaction = this.createTransaction.bind(this);
     this.loginButtonClickHandler = this.loginButtonClickHandler.bind(this);
     this.logoutButtonClickHandler = this.logoutButtonClickHandler.bind(this);
+
+    this.userDocRef = null;
+    this.categoryDocRefs = null;
   }
 
   initFirebase() {
@@ -73,36 +76,59 @@ class App extends Component {
         .then(querySnapshot => {
           const userDoc = querySnapshot.docs[0];
           const userDocId = userDoc.id;
-          console.log(userDoc.data());
+          
+          const budgetName = userDoc.data().budgetName;
+          this.setState({budget: { budgetName }});
+          console.log("UserDocData", userDoc.data());
 
-          const budgetsRef = usersRef.doc(userDocId).collection("budgets");
-          return budgetsRef.get();
+          this.userDocRef = usersRef.doc(userDocId);
+
+          const categoriesCollectionRef = this.userDocRef.collection("categories");
+          return categoriesCollectionRef.get();
         })
         .then(querySnapshot => {
+          const budget = this.state.budget;
+
           if (querySnapshot.docs.length === 0) {
             this.setState({budget: null})
+          } else {
+            this.categoryDocRefs = [];
+            const categories = [];
+            querySnapshot.forEach(doc => {
+              categories.push({...doc.data(), id: doc.id});
+              const docRef = this.userDocRef.collection("categories").doc(doc.id);
+              this.categoryDocRefs.push(docRef);
+            })
+
+            budget.categories = categories;
           }
 
-          console.log(querySnapshot.docs.length);
-          querySnapshot.forEach(doc => {
-            console.log("Budget doc", doc);
+          console.log("Budget is", budget);
+
+          // console.log(querySnapshot.docs.length);
+          // querySnapshot.forEach(doc => {
+          //   console.log("Budget doc", doc);
+          // })
+          this.setState({initialLoading: false, budget})
+          
+          return this.fetchTransactions();
+        })
+        .then(querySnapshots => {
+          const categories = this.state.budget.categories;
+
+          querySnapshots.map(snapshot => {
+            snapshot.forEach(doc => {
+              const parentDocId = doc.ref.parent.parent.id;
+              const category = this.state.budget.categories.find(category => category.id === parentDocId);
+              const transaction = {...doc.data(), id: doc.id};
+
+              category.transactions.push(transaction);
+              categories.push(category);
+            })
           })
 
-          this.setState({initialLoading: false})
+          this.setState({budget: {...this.state.budget, categories}, fetchingTransactions: false});
         })
-
-        // this.setState({
-        //   // user: {
-        //   //   uid: user.uid, 
-        //   //   name: user.displayName, 
-        //   //   email: user.email, 
-        //   //   phoneNumber: user.phoneNumber
-        //   // }, 
-          
-        // })
-        
-        // this.fetchTransactions();
-        // this.fetchCategories();
       } else {
         this.setState({
           initialLoading: false,
@@ -123,24 +149,38 @@ class App extends Component {
   }
 
   fetchTransactions() {
-    const transactions = [];
-    this.state.db.collection("change").get()
-    .then((querySnapshot) => {
-      querySnapshot.forEach((doc) => {
-          transactions.push({...doc.data(), id: doc.id});
-          console.log(`${doc.id} => `, doc.data());
-      });
+    const dataPromises = this.categoryDocRefs.map(docRef => {
+      return docRef.collection("transactions").get()
+    })
 
-      this.setState({transactions, fetchingTransactions: false});
-    });
+    return Promise.all(dataPromises);
   }
 
   fetchCategories() {
     return;
   }
 
-  saveBudget = () => {
+  saveBudget = (budget) => {
+    const categoriesCollectionRef = this.userDocRef
+    .collection("categories");
 
+    this.userDocRef.update({
+      budgetName: budget.budgetName
+    })
+    .then(() => {
+      const dataPromises = budget.categories.map(category => {
+        return categoriesCollectionRef.doc().set({...category})
+      })
+
+      return Promise.all(dataPromises);
+    })
+    .then(() => {
+      console.log("The categories were added!");
+      this.setState({displayBudget: false, displayTransactionOverview: true});
+    })
+    .catch(err => {
+      console.log(err.message);
+    })
   }
 
   fabClickHandler() {
@@ -161,16 +201,26 @@ class App extends Component {
     })
   }
 
-  createTransaction() {
-    this.state.db.collection("transactions").add({
-      ...this.state
+  addTransaction = (transaction) => {
+    this.userDocRef.collection("categories").doc(transaction.categoryId).collection("transactions").add({
+      amount: transaction.amount, 
+      adding: transaction.adding, 
+      comment: transaction.comment, 
+      date: moment.utc()
     })
-    .then(function(docRef) {
-      console.log("Document written with ID: ", docRef.id);
+    .then(docRef => {
+      console.log("Added transaction with docref", docRef);
+      this.setState({displayCreateTransactionForm: false, displayTransactionOverview: true});
     })
-    .catch(function(error) {
-      console.error("Error adding document: ", error);
-    });
+    // this.state.db.collection("transactions").add({
+    //   ...this.state
+    // })
+    // .then(function(docRef) {
+    //   console.log("Document written with ID: ", docRef.id);
+    // })
+    // .catch(function(error) {
+    //   console.error("Error adding document: ", error);
+    // });
   }
 
   cancelTransactionForm() {
@@ -190,19 +240,21 @@ class App extends Component {
     if (this.state.db && this.state.firebaseAuth) {
       if (this.state.user) {
         if (!this.state.budget) {
+          // ----- CREATE BUDGET ------
           renderingPage = <CreateBudget
             firstTime={true}
             saveBudget={this.saveBudget}
+            budget={this.state.budget}
           />
         } else if (this.state.displayCreateTransactionForm) {
           // ----- ADD TRANSACTION FORM ------
           renderingPage = <ChangeBalanceForm 
             adding={true} 
-            categories={this.state.categories} 
+            categories={this.state.budget.categories} 
             cancelTransactionForm={this.cancelTransactionForm} 
-            createTransaction={this.createTransaction}
+            addTransaction={this.addTransaction}
           />;
-      } else {
+        } else {
           // ----- TRANSACTION OVERVIEW -----
           renderingPage = <TransactionOverview 
             transactions={this.state.transactions} 
@@ -239,7 +291,7 @@ class App extends Component {
           }
         </main>
 
-        { footer }
+        {/* { footer } */}
       </div>
     )
   }

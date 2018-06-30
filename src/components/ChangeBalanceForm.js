@@ -8,19 +8,16 @@ class ChangeBalanceForm extends Component {
         this.state = {
             adding: this.props.adding, 
             amount: "", 
-            categoryId: "0", 
+            categoryId: "", 
             comment: ""
         }
 
         this.handleChange = this.handleChange.bind(this);
-        this.createTransaction = this.createTransaction.bind(this);
     }
 
     componentDidMount() {
-        document.addEventListener('DOMContentLoaded', function() {
-            var elems = document.querySelectorAll('select');
-            window.M.FormSelect.init(elems, {classes: ""});
-        });
+        var elems = document.querySelectorAll('select');
+        window.M.FormSelect.init(elems, {classes: ""});
     }
 
     handleChange(event) {
@@ -31,29 +28,9 @@ class ChangeBalanceForm extends Component {
         this.setState({[name]: value});
     }
 
-    createTransaction() {
-        this.props.createTransaction({...this.state});
-        // const db = this.props.db;
-
-        // db.collection("transactions").add({
-        //     ...this.state
-        // })
-        // .then(function(docRef) {
-        //     console.log("Document written with ID: ", docRef.id);
-        // })
-        // .catch(function(error) {
-        //     console.error("Error adding document: ", error);
-        // });
+    addTransaction = () => {
+        this.props.addTransaction({...this.state});
     }
-
-    // static getDerivedStateFromProps(newProps, prevState) {
-    //     document.addEventListener('DOMContentLoaded', function() {
-    //         var elems = document.querySelectorAll('select');
-    //         window.M.FormSelect.init(elems, {classes: ""});
-    //     });
-
-    //     return null;
-    // }
 
     render() {
         return (
@@ -71,15 +48,12 @@ class ChangeBalanceForm extends Component {
                         </div>
                         <div className="input-field col s12 m8">
                             <select id="category" className="browser-default" value={this.state.categoryId} onChange={this.handleChange} name="categoryId">
-                                {/* <option value="0" disabled>Kategori</option>
-                                <option value="1">Fyll og fanteri</option>
-                                <option value="2">Mat</option>
-                                <option value="3">Tull og tøys</option> */}
+                                <option value="" disabled>Velg kategori</option>
                                 {this.props.categories.map(category => 
-                                    <option value={category.id}>{category.name}</option>
+                                    <option value={category.id} key={category.id}>{category.name}</option>
                                 )}
                             </select>
-                            <label htmlFor="category">Category</label>
+                            {/* <label htmlFor="category">Category</label> */}
                         </div>
                         <div className="col s12">
                             <div className="input-field">
@@ -87,7 +61,7 @@ class ChangeBalanceForm extends Component {
                                 <label htmlFor="comment">Comment</label>
                             </div>
                         </div>
-                        <a className="waves-effect waves-light btn col s4 offset-s4" onClick={this.createTransaction}>Legg til</a>
+                        <a className="waves-effect waves-light btn col s4 offset-s4" onClick={this.addTransaction}>Legg til</a>
                     </div>
                 </div>
             </div>

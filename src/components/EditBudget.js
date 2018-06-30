@@ -3,13 +3,12 @@ import { GithubPicker } from "react-color";
 import "../styles/budgetPage.css"
 // https://casesandberg.github.io/react-color/
 
-class CreateBudget extends Component {
+class EditBudget extends Component {
   constructor(props) {
     super(props);
 
     this.state = {
-      categories: [], 
-      amount: "", 
+      categories: [],
       budgetName: ""
     }
   }
@@ -57,6 +56,9 @@ class CreateBudget extends Component {
     window.M.updateTextFields();
     const toolTips = document.querySelectorAll('.tooltipped');
     window.M.Tooltip.init(toolTips, {});
+
+    const { budget } = this.props;
+    this.setState({...budget});
   }
 
   render() {
@@ -84,6 +86,7 @@ class CreateBudget extends Component {
                       placeholder="Hygiene, mat, osv." 
                       value={category.name} 
                       onChange={(e) => this.onCategoryInputChange(e, i)} 
+                      autoComplete="off"
                     />
                     <label htmlFor={"category-name-input-" + i} className="active">Navn på kategori</label>
                   </div>
@@ -98,6 +101,7 @@ class CreateBudget extends Component {
                       name="amount"
                       value={category.amount} 
                       onChange={(e) => this.onCategoryInputChange(e, i)} 
+                      autoComplete="off"
                     />
                     <label htmlFor={"category-amount-input-" + i}>Forventede kr</label> 
                   </div>
@@ -136,7 +140,7 @@ class CreateBudget extends Component {
           : 
           <a className="waves-effect btn cancel-button tooltipped" onClick={this.cancelBudget} data-position="top" data-tooltip="I am a tooltip">Avbryt</a>
           }
-          <a className="waves-effect btn save-button" onClick={this.saveBudget}>Lagre</a>
+          <a className="waves-effect btn save-button" onClick={() => this.props.saveBudget(this.state)}>Lagre</a>
         </div>
 
       </div>
@@ -144,4 +148,4 @@ class CreateBudget extends Component {
   }
 }
 
-export default CreateBudget;
+export default EditBudget;
